@@ -1,0 +1,37 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// Bot Configuration Model
+model BotConfig {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// User Interaction Logs
+model UserLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  details   String?
+  timestamp DateTime @default(now())
+}
+
+// Command Tracking
+model CommandUsage {
+  id        String   @id @default(cuid())
+  command   String
+  count     Int      @default(1)
+  lastUsed  DateTime @default(now())
+}
