@@ -1,4 +1,4 @@
-import NextAuth from 'next-auth';
+import NextAuth, { Session } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { z } from 'zod';
 import type { NextAuthOptions } from 'next-auth';
@@ -8,6 +8,16 @@ const LoginSchema = z.object({
   username: z.string().min(3, 'Username must be at least 3 characters'),
   password: z.string().min(6, 'Password must be at least 6 characters')
 });
+
+// Extend the Session type to include the 'id' property
+interface ExtendedSession extends Session {
+  user: {
+    id?: string;
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+  };
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -57,10 +67,11 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id as string;
+      const extendedSession = session as ExtendedSession;
+      if (extendedSession.user) {
+        extendedSession.user.id = token.id as string;
       }
-      return session;
+      return extendedSession;
     }
   },
   session: {

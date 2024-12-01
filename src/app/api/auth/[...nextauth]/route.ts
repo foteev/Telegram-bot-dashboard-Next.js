@@ -1,7 +1,13 @@
-import NextAuth from 'next-auth';
+import NextAuth, { Session } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { z } from 'zod';
-import { Session } from 'next-auth';
+import type { NextAuthOptions } from 'next-auth';
+
+// Define login schema
+const LoginSchema = z.object({
+  username: z.string().min(3, 'Username must be at least 3 characters'),
+  password: z.string().min(6, 'Password must be at least 6 characters')
+});
 
 // Extend the Session type to include the 'id' property
 interface ExtendedSession extends Session {
@@ -13,12 +19,7 @@ interface ExtendedSession extends Session {
   };
 }
 
-const LoginSchema = z.object({
-  username: z.string().min(3, 'Username must be at least 3 characters'),
-  password: z.string().min(6, 'Password must be at least 6 characters')
-});
-
-const handler = NextAuth({
+export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       name: 'Credentials',
@@ -28,6 +29,7 @@ const handler = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.username || !credentials?.password) {
+          console.error('Missing credentials');
           throw new Error('Missing credentials');
         }
 
@@ -40,12 +42,14 @@ const handler = NextAuth({
             validatedCredentials.username === process.env.ADMIN_USERNAME && 
             validatedCredentials.password === process.env.ADMIN_PASSWORD
           ) {
+            console.log('User authenticated successfully');
             return { 
               id: '1', 
               name: validatedCredentials.username,
               email: 'admin@example.com'
             };
           }
+          console.error('Invalid credentials');
           throw new Error('Invalid credentials');
         } catch (error) {
           console.error('Authentication error:', error);
@@ -78,6 +82,8 @@ const handler = NextAuth({
     maxAge: 24 * 60 * 60,
   },
   secret: process.env.NEXTAUTH_SECRET,
-});
+};
+
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };
