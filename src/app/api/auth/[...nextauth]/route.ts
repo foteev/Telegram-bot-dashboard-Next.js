@@ -1,7 +1,6 @@
-import NextAuth, { Session } from 'next-auth';
+import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { z } from 'zod';
-import type { NextAuthOptions } from 'next-auth';
 
 // Define login schema
 const LoginSchema = z.object({
@@ -19,7 +18,7 @@ interface ExtendedSession extends Session {
   };
 }
 
-export const authOptions: NextAuthOptions = {
+const authOptions = {
   providers: [
     CredentialsProvider({
       name: 'Credentials',
