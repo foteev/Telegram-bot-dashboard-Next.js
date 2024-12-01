@@ -1,6 +1,9 @@
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { z } from 'zod';
+import { Session, SessionStrategy } from 'next-auth';
+import { JWT } from 'next-auth/jwt';
+import { AdapterUser } from 'next-auth/adapters';
 
 // Define login schema
 const LoginSchema = z.object({
@@ -62,22 +65,28 @@ const authOptions = {
     error: '/auth/signin',
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user }: { token: JWT; user: any }) {
       if (user) {
         token.id = user.id;
       }
       return token;
     },
-    async session({ session, token }) {
-      const extendedSession = session as ExtendedSession;
-      if (extendedSession.user) {
-        extendedSession.user.id = token.id as string;
-      }
-      return extendedSession;
+    async session({ session, token, user }: { 
+      session: Session; 
+      token: JWT; 
+      user: AdapterUser | undefined;
+    }): Promise<ExtendedSession> {
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: token.id as string
+        }
+      };
     }
   },
   session: {
-    strategy: 'jwt',
+    strategy: 'jwt' as SessionStrategy,
     maxAge: 24 * 60 * 60,
   },
   secret: process.env.NEXTAUTH_SECRET,
